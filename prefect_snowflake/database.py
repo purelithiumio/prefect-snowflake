@@ -646,7 +646,7 @@ async def snowflake_query(
 async def snowflake_multiquery(
     queries: List[str],
     snowflake_connector: SnowflakeConnector,
-    params: Union[Tuple[Any], Dict[str, Any]] = None,
+    params: Union[Tuple[Any], Dict[str, Any],List[Union[Tuple[Any], Dict[str,Any]]]] = None,
     cursor_type: Type[SnowflakeCursor] = SnowflakeCursor,
     as_transaction: bool = False,
     return_transaction_control_results: bool = False,
@@ -706,11 +706,18 @@ async def snowflake_multiquery(
         if as_transaction:
             queries.insert(0, BEGIN_TRANSACTION_STATEMENT)
             queries.append(END_TRANSACTION_STATEMENT)
+            params.insert(0, None)
+            params.append(None)
 
         with connection.cursor(cursor_type) as cursor:
             results = []
-            for query in queries:
-                response = cursor.execute_async(query, params=params)
+            for i,query in enumerate(queries):
+                if isinstance(params, list):
+                    query_params = params[i]
+                else:
+                    query_params = params
+                print(query,params)
+                response = cursor.execute_async(query, params=query_params)
                 query_id = response["queryId"]
                 while connection.is_still_running(
                     connection.get_query_status_throw_if_error(query_id)
