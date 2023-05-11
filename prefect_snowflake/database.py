@@ -706,8 +706,9 @@ async def snowflake_multiquery(
         if as_transaction:
             queries.insert(0, BEGIN_TRANSACTION_STATEMENT)
             queries.append(END_TRANSACTION_STATEMENT)
-            params.insert(0, None)
-            params.append(None)
+            if isinstance(params,list):
+                params.insert(0, None)
+                params.append(None)
 
         with connection.cursor(cursor_type) as cursor:
             results = []
