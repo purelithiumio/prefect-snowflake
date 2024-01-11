@@ -3,7 +3,7 @@
 import re
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import (
@@ -20,7 +20,12 @@ except ImportError:
 
 import snowflake.connector
 from prefect.blocks.abstract import CredentialsBlock
-from pydantic import Field, SecretBytes, SecretField, SecretStr, root_validator
+from pydantic import VERSION as PYDANTIC_VERSION
+
+if PYDANTIC_VERSION.startswith("2."):
+    from pydantic.v1 import Field, SecretBytes, SecretField, SecretStr, root_validator
+else:
+    from pydantic import Field, SecretBytes, SecretField, SecretStr, root_validator
 
 # PEM certificates have the pattern:
 #   -----BEGIN PRIVATE KEY-----
@@ -70,7 +75,7 @@ class SnowflakeCredentials(CredentialsBlock):
     """  # noqa E501
 
     _block_type_name = "Snowflake Credentials"
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/2DxzAeTM9eHLDcRQx1FR34/f858a501cdff918d398b39365ec2150f/snowflake.png?h=250"  # noqa
+    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/bd359de0b4be76c2254bd329fe3a267a1a3879c2-250x250.png"  # noqa
     _documentation_url = "https://prefecthq.github.io/prefect-snowflake/credentials/#prefect_snowflake.credentials.SnowflakeCredentials"  # noqa
 
     account: str = Field(
@@ -278,7 +283,7 @@ class SnowflakeCredentials(CredentialsBlock):
         return f"{pem_parts[1]}\n{body}\n{pem_parts[3]}".encode()
 
     def get_client(
-        self, **connect_kwargs: Dict[str, Any]
+        self, **connect_kwargs: Any
     ) -> snowflake.connector.SnowflakeConnection:
         """
         Returns an authenticated connection that can be used to query
@@ -315,10 +320,10 @@ class SnowflakeCredentials(CredentialsBlock):
             ```
         """  # noqa
         connect_params = {
-            **connect_kwargs,
             # required to track task's usage in the Snowflake Partner Network Portal
             "application": "Prefect_Snowflake_Collection",
             **self.dict(exclude_unset=True, exclude={"block_type_slug"}),
+            **connect_kwargs,
         }
 
         for key, value in connect_params.items():

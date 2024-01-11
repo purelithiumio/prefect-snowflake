@@ -7,7 +7,13 @@ from prefect import task
 from prefect.blocks.abstract import DatabaseBlock
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from prefect.utilities.hashing import hash_objects
-from pydantic import Field
+from pydantic import VERSION as PYDANTIC_VERSION
+
+if PYDANTIC_VERSION.startswith("2."):
+    from pydantic.v1 import Field
+else:
+    from pydantic import Field
+
 from snowflake.connector.connection import SnowflakeConnection
 from snowflake.connector.cursor import SnowflakeCursor
 
@@ -74,7 +80,7 @@ class SnowflakeConnector(DatabaseBlock):
     """  # noqa
 
     _block_type_name = "Snowflake Connector"
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/2DxzAeTM9eHLDcRQx1FR34/f858a501cdff918d398b39365ec2150f/snowflake.png?h=250"  # noqa
+    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/bd359de0b4be76c2254bd329fe3a267a1a3879c2-250x250.png"  # noqa
     _documentation_url = "https://prefecthq.github.io/prefect-snowflake/database/#prefect_snowflake.database.SnowflakeConnector"  # noqa
     _description = "Perform data operations against a Snowflake database."
 
@@ -107,7 +113,7 @@ class SnowflakeConnector(DatabaseBlock):
     _connection: Optional[SnowflakeConnection] = None
     _unique_cursors: Dict[str, SnowflakeCursor] = None
 
-    def get_connection(self, **connect_kwargs: Dict[str, Any]) -> SnowflakeConnection:
+    def get_connection(self, **connect_kwargs: Any) -> SnowflakeConnection:
         """
         Returns an authenticated connection that can be
         used to query from Snowflake databases.
@@ -258,7 +264,7 @@ class SnowflakeConnector(DatabaseBlock):
         operation: str,
         parameters: Optional[Dict[str, Any]] = None,
         cursor_type: Type[SnowflakeCursor] = SnowflakeCursor,
-        **execute_kwargs: Dict[str, Any],
+        **execute_kwargs: Any,
     ) -> Tuple[Any]:
         """
         Fetch a single result from the database.
@@ -320,7 +326,7 @@ class SnowflakeConnector(DatabaseBlock):
         parameters: Optional[Dict[str, Any]] = None,
         size: Optional[int] = None,
         cursor_type: Type[SnowflakeCursor] = SnowflakeCursor,
-        **execute_kwargs: Dict[str, Any],
+        **execute_kwargs: Any,
     ) -> List[Tuple[Any]]:
         """
         Fetch a limited number of results from the database.
@@ -392,7 +398,7 @@ class SnowflakeConnector(DatabaseBlock):
         operation: str,
         parameters: Optional[Dict[str, Any]] = None,
         cursor_type: Type[SnowflakeCursor] = SnowflakeCursor,
-        **execute_kwargs: Dict[str, Any],
+        **execute_kwargs: Any,
     ) -> List[Tuple[Any]]:
         """
         Fetch all results from the database.
@@ -454,7 +460,7 @@ class SnowflakeConnector(DatabaseBlock):
         operation: str,
         parameters: Optional[Dict[str, Any]] = None,
         cursor_type: Type[SnowflakeCursor] = SnowflakeCursor,
-        **execute_kwargs: Dict[str, Any],
+        **execute_kwargs: Any,
     ) -> None:
         """
         Executes an operation on the database. This method is intended to be used
