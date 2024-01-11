@@ -723,7 +723,6 @@ async def snowflake_multiquery(
                     query_params = params[i]
                 else:
                     query_params = params
-                print(query,params)
                 response = cursor.execute_async(query, params=query_params)
                 query_id = response["queryId"]
                 while connection.is_still_running(
